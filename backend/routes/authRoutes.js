@@ -1,13 +1,12 @@
 // backend/routes/authRoutes.js
 const express = require('express');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); // Assuming you're using JWT for authentication
 const { PrismaClient } = require('@prisma/client');
+
+const router = express.Router(); // Initialize the router here
 const prisma = new PrismaClient();
 
-const router = express.Router();
-
-// Login route
 router.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -28,10 +27,15 @@ router.post('/api/login', async (req, res) => {
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token });
+
+    // Return userId and token to the frontend
+    res.status(200).json({
+      token,
+      userId: user.id,  // Add userId here
+    });
   } catch (error) {
     res.status(500).json({ error: 'Login failed' });
   }
 });
 
-module.exports = router;
+module.exports = router; // Export the router to be used in server.js

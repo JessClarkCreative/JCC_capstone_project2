@@ -9,6 +9,7 @@ import Login from './components/Login'; // Login component
 import Signup from './components/Signup'; // Signup component
 import TriviaGame from './components/TriviaGame'; // Trivia Game component
 import Leaderboard from './components/Leaderboard'; // Leaderboard component
+import ThanksForPlaying from './components/ThanksForPlaying'; // ThanksForPlaying component
 
 import { Grid } from 'semantic-ui-react';
 
@@ -32,6 +33,7 @@ function App() {
           <Route path="/signup" element={<Signup />} /> {/* Signup route */}
           <Route path="/game" element={<TriviaGame />} /> {/* Trivia Game route */}
           <Route path="/leaderboard" element={<Leaderboard />} /> {/* Leaderboard route */}
+          <Route path="/thanks" element={<ThanksForPlaying />} /> {/* Thanks For Playing route */}
         </Routes>
       </Grid>
     </Router>

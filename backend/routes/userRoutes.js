@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
 const { PrismaClient } = require("@prisma/client");
 
 const router = express.Router();
@@ -29,14 +30,17 @@ router.post('/api/users', async (req, res) => {
 
   try {
 
+    const salt = 10;
+    const passHash = await bcrypt.hash(password, salt);
+
     // This actions creates a User in the database, similar to SQLAlchemy
     const user = await prisma.user.create({
-      data: { email, password },
+      data: { email, password: passHash},
     });
     return res.status(201).json(user);
 
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create a user' });
+    return res.status(500).json({ error: 'Failed to create a user' });
   }
 });
 
