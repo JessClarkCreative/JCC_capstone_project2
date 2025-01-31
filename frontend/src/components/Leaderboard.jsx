@@ -32,7 +32,7 @@ const Leaderboard = ({ showGlobalOnly, showPersonalOnly }) => {
    */
   const fetchLeaderboard = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/leaderboard');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/leaderboard`);
       const data = await response.json();
       setLeaderboard(data);
     } catch (error) {
@@ -45,7 +45,7 @@ const Leaderboard = ({ showGlobalOnly, showPersonalOnly }) => {
    */
   const fetchPersonalScores = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/scores/${userId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/scores/${userId}`);
       const data = await response.json();
       setPersonalScores(data);
     } catch (error) {

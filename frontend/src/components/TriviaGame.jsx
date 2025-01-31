@@ -84,20 +84,13 @@ const TriviaGame = () => {
   };
 
   const saveScore = async () => {
-    console.log('Saving score:', { userId, score }); // Debug log
-    
     if (!userId) {
       alert('Please log in to save your score');
       return;
     }
 
-    if (score === undefined || score === null) {
-      alert('Invalid score value');
-      return;
-    }
-
     try {
-      const response = await fetch('http://localhost:5000/api/score', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/score`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,9 +104,6 @@ const TriviaGame = () => {
       if (!response.ok) {
         throw new Error('Failed to save score');
       }
-
-      const data = await response.json();
-      console.log('Score saved successfully:', data); // Debug log
 
       window.location.href = '/thanks';
     } catch (error) {

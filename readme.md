@@ -3,7 +3,7 @@
 ## Quick Start (For Grading)
 
 ### Option 1: Play Live Version
-Visit: [https://your-deployed-url.com](https://your-deployed-url.com)
+Visit: [https://trivia-game-frontend.onrender.com]
 
 Test Account:
 - Email: test@example.com
@@ -15,7 +15,7 @@ Or create your own account to play!
 
 1. Clone the repository:
 ```bash
-git clone [your-repository-url]
+git clone [https://github.com/JessClarkCreative/JCC_capstone_project2.git]
 cd trivia-master
 ```
 
