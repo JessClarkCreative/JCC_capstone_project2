@@ -1,43 +1,92 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Form, Button, Message } from 'semantic-ui-react';
 
-const Signup = () => {
+const Signup = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      await axios.post('http://localhost:5000/api/users', { email, password });
-      navigate('/login');  // Redirect to login after successful signup
+      const response = await fetch('http://localhost:5000/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, username }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Signup failed');
+      }
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
+      setError('Signup failed. Please try again.');
       console.error(error);
-      alert('Signup failed!');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2>Sign Up</h2>
-      <form onSubmit={handleSignup}>
-        <input 
-          type="email" 
-          placeholder="Email" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
+    <Form onSubmit={handleSignup} error={!!error} loading={loading}>
+      {error && (
+        <Message
+          error
+          header="Signup Failed"
+          content={error}
         />
-        <input 
-          type="password" 
-          placeholder="Password" 
-          value={password} 
-          onChange={(e) => setPassword(e.target.value)} 
-        />
-        <button type="submit">Sign Up</button>
-      </form>
-    </div>
+      )}
+      <Form.Input
+        fluid
+        icon="user"
+        iconPosition="left"
+        label="Username"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        required
+      />
+      <Form.Input
+        fluid
+        icon="mail"
+        iconPosition="left"
+        label="Email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <Form.Input
+        fluid
+        icon="lock"
+        iconPosition="left"
+        label="Password"
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <Button 
+        fluid 
+        primary 
+        size="large"
+        loading={loading}
+        disabled={loading}
+      >
+        Sign Up
+      </Button>
+    </Form>
   );
 };
 

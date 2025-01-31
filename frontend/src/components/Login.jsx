@@ -1,53 +1,85 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Form, Button, Message } from 'semantic-ui-react';
 
-const Login = () => {
+const Login = ({ onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-  
+    setError('');
+    setLoading(true);
+
     try {
-      const response = await axios.post('http://localhost:5000/api/login', { email, password });
-  
-      // Log the response to confirm userId and token
-      console.log(response.data); // This will log the userId and token
-  
-      // Store userId and token in localStorage
-      localStorage.setItem('userId', response.data.userId);  // Store userId
-      localStorage.setItem('token', response.data.token);    // Store token
-  
-      // Redirect to trivia game page
-      navigate('/game');
+      const response = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('token', data.token);
+      
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
+      setError('Invalid email or password');
       console.error(error);
-      alert('Login failed!');
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+    <Form onSubmit={handleLogin} error={!!error} loading={loading}>
+      {error && (
+        <Message
+          error
+          header="Login Failed"
+          content={error}
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button type="submit">Login</button>
-      </form>
-    </div>
+      )}
+      <Form.Input
+        fluid
+        icon="mail"
+        iconPosition="left"
+        label="Email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <Form.Input
+        fluid
+        icon="lock"
+        iconPosition="left"
+        label="Password"
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <Button 
+        fluid 
+        primary 
+        size="large"
+        loading={loading}
+        disabled={loading}
+      >
+        Login
+      </Button>
+    </Form>
   );
 };
 

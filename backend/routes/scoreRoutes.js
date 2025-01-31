@@ -1,40 +1,65 @@
-// backend/routes/scoreRoutes.js
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const router = express.Router();
 
-// Update score route
+// Update score route - now creates a new score entry
 router.post('/api/score', async (req, res) => {
   const { userId, score } = req.body;
-  console.log('Backend received:', { userId, score });  // Log what was received by the backend
+  console.log('Backend received:', { userId, score });
 
   if (!userId || score === undefined) {
-    console.log('Missing userId or score in backend');  // Log if the backend didn't get the required fields
+    console.log('Missing userId or score in backend');
     return res.status(400).json({ error: 'User ID and score are required' });
   }
 
   try {
-    // Check if the user exists in the database
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    // Check if the user exists
+    const user = await prisma.user.findUnique({ 
+      where: { id: parseInt(userId) } 
+    });
     
     if (!user) {
-      console.log(`User with ID ${userId} not found`); // Log if the user was not found
+      console.log(`User with ID ${userId} not found`);
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Update the user's score
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { score },
+    // Create a new score entry
+    const newScore = await prisma.score.create({
+      data: {
+        score: score,
+        userId: parseInt(userId)
+      }
     });
 
-    console.log('Score updated successfully:', updatedUser); // Log the updated user
-    return res.status(200).json(updatedUser);
+    console.log('Score saved successfully:', newScore);
+    return res.status(200).json(newScore);
   } catch (error) {
-    console.error('Error saving score:', error);  // Log any error that occurs
+    console.error('Error saving score:', error);
     return res.status(500).json({ error: 'Failed to update score' });
+  }
+});
+
+// Get user's score history
+router.get('/api/scores/:userId', async (req, res) => {
+  const { userId } = req.params;
+  
+  try {
+    const scores = await prisma.score.findMany({
+      where: { 
+        userId: parseInt(userId) 
+      },
+      orderBy: { 
+        createdAt: 'desc' 
+      },
+      take: 10  // Get last 10 scores
+    });
+    
+    return res.status(200).json(scores);
+  } catch (error) {
+    console.error('Error fetching scores:', error);
+    return res.status(500).json({ error: 'Failed to fetch scores' });
   }
 });
 

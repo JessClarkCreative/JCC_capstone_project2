@@ -1,23 +1,92 @@
+# Trivia Master Backend
 
-* Database Setup *
+Express and PostgreSQL backend for the Trivia Master application.
 
-1. Install dependencies with [npm install]
+## Setup
 
-2. Init Prisma ORM with [npx prisma init] 
-  (NOTE: [npx] not [npm])
+1. Install dependencies:
+```bash
+npm install
+```
 
-3. Set your DATABASE_URL in the .env file
-  - example DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db
-  - don't forget to create a database with [createdb] command
+2. Create a .env file:
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/db_trivia"
+JWT_SECRET="your-secret-key"
+PORT=5000
+```
 
-4. Generate Prisma client with [npx prisma generate]
-  (AGAIN: [npx] not [npm])
+3. Run database migrations:
+```bash
+npx prisma migrate dev
+```
 
+4. Start server:
+```bash
+npm run dev
+```
 
-5. Migrate and create initial table with [npx prisma migrate dev --name init]
-  - (You should see a message like "Your database is now in sync with your schema.")
-  - Use migrations when adding tables, changing columns, etc
+## API Routes
 
-6. [npm run dev] should run the server, it will "hot reload" whenever any changes on the backend code are saved
+### Authentication
+```
+POST /api/login
+- Body: { email, password }
+- Returns: { token, userId }
 
-7. The server runs at [localhost:5000] unless changed in the ENV
+POST /api/users
+- Body: { email, password, username }
+- Returns: { id, email, username }
+```
+
+### Scores
+```
+POST /api/score
+- Body: { userId, score }
+- Returns: { id, score, userId, createdAt }
+
+GET /api/scores/:userId
+- Returns: Array of user's scores
+```
+
+### Leaderboard
+```
+GET /api/leaderboard
+- Returns: Array of top scores with usernames
+```
+
+## Database Schema
+
+```prisma
+model User {
+  @@map("users")
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  username  String   @unique
+  scores    Score[]
+}
+
+model Score {
+  @@map("scores")
+  id        Int      @id @default(autoincrement())
+  score     Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+```
+
+## Dependencies
+
+- Express
+- Prisma ORM
+- PostgreSQL
+- JWT
+- bcrypt
+
+## Development Notes
+
+- Uses Prisma for database operations
+- JWT for authentication
+- CORS enabled for frontend communication
