@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Segment, Button, Header, Progress, Message, Loader } from 'semantic-ui-react';
+import { useNavigate } from 'react-router-dom';
 
 const TriviaGame = () => {
+  const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentRound, setCurrentRound] = useState(1);
@@ -15,6 +17,7 @@ const TriviaGame = () => {
   const QUESTIONS_PER_ROUND = 5;
   const TOTAL_ROUNDS = 3;
 
+  // Styles
   const gameContainerStyle = {
     minHeight: '400px',
     display: 'flex',
@@ -36,53 +39,72 @@ const TriviaGame = () => {
     gap: '10px'
   };
 
+  // Utility to decode HTML entities
   const decodeHTML = (html) => {
     const txt = document.createElement('textarea');
     txt.innerHTML = html;
     return txt.value;
   };
 
-  const handleFetchQuestions = async () => {
+  // Fetch questions from Open Trivia DB
+  const fetchQuestions = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(`https://opentdb.com/api.php?amount=${QUESTIONS_PER_ROUND}`);
       const data = await response.json();
+      
+      if (data.response_code !== 0) {
+        throw new Error('Failed to fetch questions');
+      }
+
       setQuestions(data.results);
       setCurrentQuestionIndex(0);
       setAnswered(false);
       setSelectedAnswer(null);
     } catch (err) {
-      setError('Failed to load questions');
+      setError('Unable to load questions. Please try again.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Initial and between-round question loading
+  useEffect(() => {
+    if (currentRound === 1 || questions.length === 0) {
+      fetchQuestions();
+    }
+  }, [currentRound]);
+
+  // Start a new round or save final score
   const startNewRound = async () => {
     if (currentRound < TOTAL_ROUNDS) {
       setCurrentRound(prev => prev + 1);
-      await handleFetchQuestions();
+      await fetchQuestions();
     } else {
       await saveScore();
     }
   };
 
+  // Handle user's answer selection
   const handleAnswer = (answer, correctAnswer) => {
     if (answered) return;
     setSelectedAnswer(answer);
     setAnswered(true);
     if (answer === correctAnswer) {
-      setScore(score + 1);
+      setScore(prev => prev + 1);
     }
   };
 
+  // Move to next question
   const nextQuestion = () => {
     setAnswered(false);
     setSelectedAnswer(null);
-    setCurrentQuestionIndex(currentQuestionIndex + 1);
+    setCurrentQuestionIndex(prev => prev + 1);
   };
 
+  // Save score to backend
   const saveScore = async () => {
     if (!userId) {
       alert('Please log in to save your score');
@@ -105,39 +127,38 @@ const TriviaGame = () => {
         throw new Error('Failed to save score');
       }
 
-      window.location.href = '/thanks';
+      navigate('/thanks');
     } catch (error) {
-      console.error('Failed to save score:', error);
+      console.error('Score save error:', error);
       alert('Failed to save score. Please try again.');
     }
   };
 
+  // Render loading state
   if (loading) {
     return (
       <Segment style={gameContainerStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          <Loader active size="large">Loading questions...</Loader>
-        </div>
+        <Loader active size="large">Loading questions...</Loader>
       </Segment>
     );
   }
 
+  // Render error state
   if (error) {
     return (
       <Segment style={gameContainerStyle}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-          <Message negative>
-            <Message.Header>Error</Message.Header>
-            <p>{error}</p>
-          </Message>
-          <Button primary onClick={handleFetchQuestions} style={{ marginTop: '1rem' }}>
+        <Message negative>
+          <Message.Header>Error</Message.Header>
+          <p>{error}</p>
+          <Button primary onClick={fetchQuestions}>
             Try Again
           </Button>
-        </div>
+        </Message>
       </Segment>
     );
   }
 
+  // No questions loaded - start game prompt
   if (!questions.length) {
     return (
       <Segment style={gameContainerStyle}>
@@ -146,7 +167,7 @@ const TriviaGame = () => {
           <Button 
             primary
             size="large"
-            onClick={handleFetchQuestions}
+            onClick={fetchQuestions}
           >
             {currentRound === 1 ? 'Start Game' : 'Start Round'}
           </Button>
@@ -155,6 +176,7 @@ const TriviaGame = () => {
     );
   }
 
+  // Current game state
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestionInRound = currentQuestionIndex === QUESTIONS_PER_ROUND - 1;
 
